@@ -60,13 +60,29 @@ body {
 @mixin standard-flex {
   display: flex;
   justify-content: space-between;
+  gap: $spc-100;
+}
+
+@mixin flex-column {
+  display: flex;
+  flex-direction: column;
 }
 
 #app {
-  display: flex;
-  flex-direction: column;
+  @include flex-column;
   height: 100%;
   gap: $spc-400;
+}
+
+.input-wrapper {
+  @include flex-column;
+
+  min-width: 10rem;
+  max-width: 17.5rem;
+
+  :invalid {
+    background-color: red;
+  }
 }
 
 #upper-info {
@@ -78,10 +94,20 @@ body {
   }
 }
 
-#forecast.container {
+#forecast-hourly.container {
   @include container;
   height: 15rem;
 
+  #forecast,
+  #hourly {
+    display: none;
+
+    &.active {
+      display: block;
+    }
+  }
+
+  .hourly-list,
   .forecast-list {
     @include standard-flex;
     overflow: auto;
@@ -89,13 +115,17 @@ body {
   }
 }
 
-.upcoming-event {
-  display: flex;
-  max-width: 60vw;
+#event {
+  max-height: 60vh;
+  overflow: auto;
+  .upcoming-event {
+    @include standard-flex;
+    max-width: clamp(10rem, 60vw, 20rem);
 
-  img {
-    height: clamp(5rem, 1rem + 10vh, 8rem);
-    aspect-ratio: 1 / 1;
-    object-fit: cover;
+    img {
+      height: clamp(5rem, 1rem + 10vh, 8rem);
+      aspect-ratio: 1 / 1;
+      object-fit: cover;
+    }
   }
 }

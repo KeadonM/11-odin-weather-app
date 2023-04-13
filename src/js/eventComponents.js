@@ -19,18 +19,16 @@ export function upcomingEventsComponent(data) {
 }
 
 function buildEvent(data) {
-  console.log(data);
-
   const eventWrapper = document.createElement('a');
   eventWrapper.className = 'upcoming-event';
   eventWrapper.href = data.url;
 
+  const eventDetails = buildDataList(data);
+  eventWrapper.appendChild(eventDetails);
+
   const eventImage = document.createElement('img');
   eventWrapper.appendChild(eventImage);
   eventImage.src = data.images[0].url;
-
-  const forecastDay = buildDataList(data);
-  eventWrapper.appendChild(forecastDay);
 
   return eventWrapper;
 }
@@ -87,6 +85,10 @@ function formatDataPoint(key, value, unit) {
     case 'name':
       label = '';
       unit = '';
+      value =
+        value.length > 45
+          ? value.split('').splice(0, 42).join('') + '...'
+          : value;
       return { label, value, unit };
     case 'type':
       label = 'Event type: ';

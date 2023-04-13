@@ -21,26 +21,30 @@
         <div id="location" class="container">
           <legend>Location</legend>
           <div class="input-wrapper">
-            <label for="location-search"></label>
+            <label for="location-search">Search</label>
             <input
               type="text"
               name="location"
               id="location-search"
               placeholder="Search Location" />
+            <span class="error"></span>
           </div>
           <div id="history">
-            <ul>
-              <li>winnipeg</li>
-              <li>toronto</li>
-            </ul>
+            <ul class="list"></ul>
           </div>
-          <div id="event" class="container"></div>
         </div>
 
-        <div id="current" class="container">current</div>
+        <div class="container">
+          <div id="current">current</div>
+          <div id="event"></div>
+        </div>
       </div>
 
-      <div id="forecast" class="container">forecast</div>
+      <div id="forecast-hourly" class="container">
+        <button class="switch-forecast-type">hourly</button>
+        <div id="forecast" class="active">forecast</div>
+        <div id="hourly">hourly</div>
+      </div>
     </div>
   </body>
 </html>
