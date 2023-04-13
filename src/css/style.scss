@@ -88,3 +88,14 @@ body {
     display: flex;
   }
 }
+
+.upcoming-event {
+  display: flex;
+  max-width: 60vw;
+
+  img {
+    height: clamp(5rem, 1rem + 10vh, 8rem);
+    aspect-ratio: 1 / 1;
+    object-fit: cover;
+  }
+}

@@ -31,6 +31,7 @@ export function weeklyForecastComponent(data) {
 function buildForecastDay(data) {
   const dayWrapper = document.createElement('div');
   dayWrapper.className = 'day-forecast';
+
   const forecastDay = buildDataList(data);
   dayWrapper.appendChild(forecastDay);
 
