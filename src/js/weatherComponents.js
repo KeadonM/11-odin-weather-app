@@ -1,20 +1,11 @@
 import { format, parseISO } from 'date-fns';
 
-export function currentWeatherComponent(data) {
+export function localTimeComponent(data) {
   const wrapper = document.createElement('div');
   wrapper.className = 'current-weather-wrapper';
 
-  const locationTitle = document.createElement('p');
-  wrapper.appendChild(locationTitle);
-  locationTitle.textContent = data.location.name;
-
-  const lastUpdate = document.createElement('p');
-  wrapper.appendChild(lastUpdate);
-  const time = formatTime12Hour(data.current.last_updated);
-  lastUpdate.textContent = 'Last update' + time;
-
-  const currentWeather = buildDataList(data.current);
-  wrapper.appendChild(currentWeather);
+  const locationData = buildDataList(data.location);
+  wrapper.appendChild(locationData);
 
   const currentAstro = buildDataList(data.forecast.forecastday[0].astro);
   wrapper.appendChild(currentAstro);
@@ -22,7 +13,17 @@ export function currentWeatherComponent(data) {
   const sunrise = currentAstro.querySelector('.sunrise .value').textContent;
   const sunset = currentAstro.querySelector('.sunset .value').textContent;
 
-  setBackground(time, sunrise, sunset);
+  setBackground(formatTime12Hour(data.location.localtime), sunrise, sunset);
+
+  return wrapper;
+}
+
+export function currentWeatherComponent(data) {
+  const wrapper = document.createElement('div');
+  wrapper.className = 'current-weather-wrapper';
+
+  const currentWeather = buildDataList(data.current);
+  wrapper.appendChild(currentWeather);
 
   return wrapper;
 }
@@ -44,14 +45,14 @@ export function hourlyForecastComponent(data) {
 
 export function weeklyForecastComponent(data) {
   const wrapper = document.createElement('div');
-  wrapper.className = 'forecast-wrapper';
+  wrapper.className = 'daily-wrapper';
 
   const forecastList = document.createElement('ol');
   wrapper.appendChild(forecastList);
-  forecastList.className = 'forecast-list';
+  forecastList.className = 'daily-list';
 
   for (let key in data) {
-    forecastList.appendChild(buildForecast(data[key].day, 'day'));
+    forecastList.appendChild(buildForecast(data[key].day, 'daily'));
   }
 
   return wrapper;
@@ -59,7 +60,7 @@ export function weeklyForecastComponent(data) {
 
 function buildForecast(data, type) {
   const wrapper = document.createElement('div');
-  wrapper.className = `${type}-forecast`;
+  wrapper.className = `${type}-forecast forecast-data`;
 
   const forecast = buildDataList(data);
   wrapper.appendChild(forecast);
@@ -71,39 +72,29 @@ function buildDataList(data) {
   const ul = document.createElement('ul');
   ul.className = 'data-list';
 
+  try {
+    ul.appendChild(buildCondition(data.condition));
+  } catch (err) {}
+
   for (let key in data) {
     const dataPoint = formatDataPoint(key, data[key]);
     if (dataPoint) {
-      const li = buildListItem(key, dataPoint, dataPoint.imperial);
+      const li = buildListItem(
+        key,
+        dataPoint.data,
+        dataPoint.imperial,
+        dataPoint.style
+      );
       ul.appendChild(li);
     }
-  }
-
-  try {
-    ul.appendChild(buildCondition(data.condition));
-  } catch (err) {
-    console.warn('No condition');
   }
 
   return ul;
 }
 
-function buildListItem(type, dataPoint, imperial) {
-  const li = document.createElement('li');
-  li.className = type.replace('_', '-');
-  li.dataset.imperial = imperial;
-
-  for (let key in dataPoint) {
-    if (dataPoint[key] != imperial)
-      li.appendChild(buildDataSpan(dataPoint[key], key));
-  }
-
-  return li;
-}
-
 function buildCondition(conditionData) {
   const condition = document.createElement('li');
-  condition.className = 'condition';
+  condition.className = 'heading condition';
 
   const conditionLabel = document.createElement('span');
   condition.appendChild(conditionLabel);
@@ -115,6 +106,19 @@ function buildCondition(conditionData) {
   conditionIcon.src = conditionData.icon;
 
   return condition;
+}
+
+function buildListItem(type, dataPoint, imperial, style) {
+  const li = document.createElement('li');
+  li.className = style === undefined ? type.replace('_', '-') : style;
+  if (imperial != undefined) li.dataset.imperial = imperial;
+
+  for (let key in dataPoint) {
+    if (dataPoint[key] != imperial)
+      li.appendChild(buildDataSpan(dataPoint[key], key));
+  }
+
+  return li;
 }
 
 function buildDataSpan(content, style) {
@@ -129,77 +133,123 @@ function formatDataPoint(key, value) {
   let label = null;
   let unit = null;
   let imperial = null;
+  let style = null;
+
+  let data = null;
 
   if (typeof value === 'number') value = Math.round(value);
 
   switch (key) {
     case 'temp_c':
-      label = '';
       unit = 'c';
       imperial = Math.round(value * 1.8 + 32);
-      return { label, value, unit, imperial };
+
+      data = { value, unit };
+      return { data, imperial };
 
     case 'feelslike_c':
       label = 'Feels like';
       unit = 'c';
       imperial = Math.round(value * 1.8 + 32);
-      return { label, value, unit, imperial };
+
+      data = { label, value, unit };
+      return { data, imperial };
 
     case 'wind_kph':
       label = 'Wind';
       unit = 'km/h';
       imperial = Math.round(value * 0.6213712);
-      return { label, value, unit, imperial };
+
+      data = { label, value, unit };
+      return { data, imperial };
 
     case 'humidity':
       label = 'Humidty';
       unit = '%';
       imperial = Math.round(value * 0.6213712);
-      return { label, value, unit, imperial };
+
+      data = { label, value, unit };
+      return { data, imperial };
 
     case 'uv':
       label = 'UV';
-      return { label, value };
+
+      data = { label, value };
+      return { data };
 
     case 'mintemp_c':
       label = 'Low';
       unit = 'c';
       imperial = Math.round(value * 1.8 + 32);
-      return { label, value, unit, imperial };
+
+      data = { label, value, unit };
+      return { data, imperial };
 
     case 'maxtemp_c':
       label = 'High';
       unit = 'c';
       imperial = Math.round(value * 1.8 + 32);
-      return { label, value, unit, imperial };
+
+      data = { label, value, unit };
+      return { data, imperial };
 
     case 'daily_chance_of_rain':
       label = 'Rain';
       unit = '%';
-      return { label, value, unit };
+
+      data = { label, value, unit };
+      return { data };
 
     case 'daily_chance_of_snow':
       label = 'Snow';
       unit = '%';
-      return { label, value, unit };
+
+      data = { label, value, unit };
+      return { data };
 
     case 'sunrise':
       label = 'Sunrise';
-      unit = '';
       value = value[0] === '0' ? value.split('').splice(1).join('') : value;
-      return { label, value, unit };
+
+      data = { label, value };
+      return { data };
 
     case 'sunset':
       label = 'Sunset';
-      unit = '';
       value = value[0] === '0' ? value.split('').splice(1).join('') : value;
-      return { label, value, unit };
+
+      data = { label, value };
+      return { data };
+
+    case 'name':
+      style = 'heading main';
+      data = { value };
+      return { data, style };
+
+    case 'country':
+      if (value.includes('USA') || value.includes('United States'))
+        value = 'United States';
+      data = { value };
+
+      return { data };
+
+    case 'localtime':
+      value = formatCustomDate(value).split('-');
+
+      data = { hour: value[0], day: value[1], date: value[2] };
+      return { data };
+
+    case 'last_updated':
+      label = 'Last Updated';
+      value = formatCustomDate(value).split('-');
+
+      data = { label, hour: value[0] };
+      return { data };
 
     default:
       return false;
   }
 }
-
 function setBackground(time, sunrise, sunset) {
   time = formatTimeToMinutes(formatTime24Hour(time));
   sunrise = formatTimeToMinutes(formatTime24Hour(sunrise));
@@ -233,17 +283,36 @@ function setBackground(time, sunrise, sunset) {
     }
   }
 
+  backgroundImage =
+    backgroundImage === undefined ? 'bg-1.png' : backgroundImage;
+
   document.querySelector(
     'body'
   ).style.backgroundImage = `url(${backgroundImage})`;
 }
 
-function formatTime12Hour(inputTime) {
+function formatCustomDate(input) {
+  input = input.replace(/(\d{4}-\d{2}-\d{2} )(\d{1}:)/, '$10$2');
+
   try {
-    const date = parseISO(inputTime);
+    const date = parseISO(input);
+    return format(date, 'h:mm aa - EEE - MMM do');
+  } catch (err) {
+    console.warn(err);
+    console.warn({ warning: 'invalid date format', input: input });
+    return 'Unknown date';
+  }
+}
+
+function formatTime12Hour(input) {
+  input = input.replace(/(\d{4}-\d{2}-\d{2} )(\d{1}:)/, '$10$2');
+
+  try {
+    const date = parseISO(input);
     return format(date, 'h:mm aa');
-  } catch {
-    console.warn('invalid date format');
+  } catch (err) {
+    console.warn(err);
+    console.warn({ warning: 'invalid date format', input: input });
     return 'Unknown date';
   }
 }

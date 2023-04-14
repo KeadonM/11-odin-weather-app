@@ -2,17 +2,34 @@ import './css/reset.css';
 import './css/style.scss';
 import apiKey from '../apikey.json';
 import './js/handleSwitches.js';
-
 import {
   currentWeatherComponent,
   hourlyForecastComponent,
   weeklyForecastComponent,
+  localTimeComponent,
 } from './js/weatherComponents.js';
 import { upcomingEventsComponent } from './js/eventComponents.js';
 import { historyComponent } from './js/miscComponents.js';
 
 const weatherKey = apiKey.weather;
 const ticketmasterkey = apiKey.ticketmaster;
+
+(async function geoSearch() {
+  try {
+    const ipResponse = await fetch('https://api.ipify.org?format=json');
+    const ip = await ipResponse.json();
+
+    const ipDataResponse = await fetch(`http://ip-api.com/json/${ip.ip}`);
+    const ipData = await ipDataResponse.json();
+
+    searchLocation(ipData.city);
+  } catch (err) {
+    console.error(err);
+    console.warn(`Couldn't find users location`);
+
+    searchLocation('Toronto');
+  }
+})();
 
 const searchBar = document.getElementById('location-search');
 
@@ -21,12 +38,11 @@ searchBar.addEventListener('keyup', async (e) => {
   searchBar.nextElementSibling.textContent = ``;
   searchBar.setCustomValidity('');
   if (e.key !== 'Enter') return;
-  searchLocation(searchBar.value);
 
+  searchLocation(searchBar.value);
   searchBar.value = '';
 });
 
-searchLocation('toronto');
 export async function searchLocation(location) {
   const weatherData = await getWeather(location);
   if (weatherData.error) {
@@ -35,15 +51,14 @@ export async function searchLocation(location) {
     return false;
   }
   displayWeatherData(weatherData);
-  saveHistory(location);
+  saveHistory(weatherData.location.name);
 
   const queryType = getQueryType(location, weatherData.location.name);
   const eventData = await getEvents(queryType, location);
 
   if (!eventData._embedded) {
     const eventContainer = document.getElementById('event');
-    eventContainer.innerHTML = '';
-    eventContainer.textContent = 'No events found.';
+    eventContainer.appendChild(buildHeading('No Events Found'));
     return true;
   }
   displayEvents(eventData);
@@ -60,18 +75,11 @@ function getQueryType(locationSearched, locationRetrieved) {
 }
 
 function saveHistory(query) {
-  const formattedQuery = capitalizeFirstLetter(query);
-
-  const component = historyComponent(formattedQuery);
+  const component = historyComponent(query);
   const historyContainer = document.querySelector('#history .list');
-  console.log(historyContainer);
 
   if (!hasIdenticalChild(historyContainer, component))
     historyContainer.prepend(component);
-
-  function capitalizeFirstLetter(str) {
-    return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
-  }
 
   function hasIdenticalChild(parentElement, newElement) {
     const children = parentElement.children;
@@ -121,10 +129,16 @@ async function getEvents(queryType, location) {
 
 function displayWeatherData(weatherData) {
   console.log(weatherData);
-  const currentContainer = document.getElementById('current');
-  currentContainer.innerHTML = '';
+
+  const localTimeContainer = document.getElementById('currentTime');
+  localTimeContainer.innerHTML = '';
+  const localTimeUI = localTimeComponent(weatherData);
+  localTimeContainer.appendChild(localTimeUI);
+
+  const currentWeather = document.getElementById('current');
+  currentWeather.innerHTML = '';
   const currentWeatherUI = currentWeatherComponent(weatherData);
-  currentContainer.appendChild(currentWeatherUI);
+  currentWeather.appendChild(currentWeatherUI);
 
   const hourlyContainer = document.getElementById('hourly');
   hourlyContainer.innerHTML = '';
@@ -133,7 +147,7 @@ function displayWeatherData(weatherData) {
   );
   hourlyContainer.appendChild(hourlyUI);
 
-  const forecastContainer = document.getElementById('forecast');
+  const forecastContainer = document.getElementById('daily');
   forecastContainer.innerHTML = '';
   const forecastUI = weeklyForecastComponent(weatherData.forecast.forecastday);
   forecastContainer.appendChild(forecastUI);
@@ -142,6 +156,17 @@ function displayWeatherData(weatherData) {
 function displayEvents(eventData) {
   const eventContainer = document.getElementById('event');
   eventContainer.innerHTML = '';
+
+  eventContainer.appendChild(buildHeading('Upcoming Events'));
+
   const upcomingEventsUI = upcomingEventsComponent(eventData._embedded);
   eventContainer.appendChild(upcomingEventsUI);
+}
+
+function buildHeading(content) {
+  const heading = document.createElement('p');
+  heading.textContent = content;
+  heading.className = 'heading';
+
+  return heading;
 }

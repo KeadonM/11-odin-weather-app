@@ -17,11 +17,10 @@
   </head>
   <body>
     <div id="app">
-      <div id="upper-info">
-        <div id="location" class="container">
-          <legend>Location</legend>
+      <div id="upper-section">
+        <div id="search" class="container">
           <div class="input-wrapper">
-            <label for="location-search">Search</label>
+            <label for="location-search" class="heading">Search</label>
             <input
               type="text"
               name="location"
@@ -34,17 +33,30 @@
           </div>
         </div>
 
-        <div class="container">
-          <div id="current">current</div>
-          <div id="event"></div>
+        <div id="time" class="container">
+          <div id="currentTime">Time</div>
         </div>
+
+        <div id="current" class="container">current</div>
+        <div id="event" class="container"></div>
       </div>
 
-      <div id="forecast-hourly" class="container">
+      <div id="forecast" class="container">
         <button class="switch-forecast-type">hourly</button>
-        <div id="forecast" class="active">forecast</div>
+        <div id="daily" class="active">forecast</div>
         <div id="hourly">hourly</div>
       </div>
+
+      <footer>
+        <a id="copyright" href="https://github.com/keadonm" target="_blank">
+          Copyright ©
+          <script>
+            document.write(new Date().getFullYear());
+          </script>
+          KeadonM
+          <i class="fab fa-github"></i>
+        </a>
+      </footer>
     </div>
   </body>
 </html>

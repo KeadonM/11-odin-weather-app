@@ -6,14 +6,8 @@ export function upcomingEventsComponent(data) {
 
   for (let event in data.events) {
     const eventDetails = buildEvent(data.events[event]);
-
     wrapper.appendChild(eventDetails);
   }
-
-  // const locationTitle = document.createElement('p');
-  // wrapper.appendChild(locationTitle);
-
-  // locationTitle.textContent = data.location.name;
 
   return wrapper;
 }

@@ -53,7 +53,8 @@ body {
 }
 
 @mixin container {
-  background-color: rgba($clr-neutral-100, 0.33);
+  // background-color: rgba($clr-neutral-100, 0.33);
+  position: relative;
   opacity: 1;
 }
 
@@ -68,10 +69,36 @@ body {
   flex-direction: column;
 }
 
+@mixin grow {
+  height: 1rem;
+  flex-grow: 1;
+}
+
+@mixin card {
+  min-width: 10rem;
+  background-color: rgba($clr-neutral-100, 0.33);
+
+  border-radius: $border-radius;
+}
+
 #app {
   @include flex-column;
   height: 100%;
-  gap: $spc-400;
+  // gap: $spc-400;
+}
+
+.heading {
+  font-size: $fs-500;
+  font-weight: bold;
+
+  &.condition {
+    @include standard-flex;
+    font-size: $fs-500;
+  }
+
+  &.main {
+    font-size: $fs-600;
+  }
 }
 
 .input-wrapper {
@@ -85,39 +112,64 @@ body {
   }
 }
 
-#upper-info {
-  @include standard-flex;
-  height: 100%;
+#upper-section {
+  @include grow;
+  display: grid;
+  grid-template-areas:
+    'search time info'
+    'none none events';
+  justify-content: space-between;
+  align-items: space-between;
 
-  .container {
-    @include container;
-  }
-}
+  @media (max-width: 40em) {
+    grid-template-areas:
+      'search search'
+      'time info'
+      'events events';
 
-#forecast-hourly.container {
-  @include container;
-  height: 15rem;
+    #current-info {
+      @include standard-flex();
+    }
 
-  #forecast,
-  #hourly {
-    display: none;
-
-    &.active {
-      display: block;
+    #event {
+      .upcoming-events-wrapper {
+        @include standard-flex();
+        overflow: auto;
+        width: 100vw;
+      }
     }
   }
 
-  .hourly-list,
-  .forecast-list {
-    @include standard-flex;
-    overflow: auto;
-    display: flex;
+  .container {
+    @include container;
+    @include flex-column;
+
+    overflow: hidden;
+    height: 100%;
+
+    &#search {
+      grid-area: search;
+    }
+    &#time {
+      grid-area: time;
+    }
+    &#current {
+      grid-area: info;
+    }
+    &#event {
+      grid-area: events;
+    }
   }
 }
 
 #event {
-  max-height: 60vh;
-  overflow: auto;
+  @include grow;
+
+  .upcoming-events-wrapper {
+    overflow: auto;
+    height: 100%;
+  }
+
   .upcoming-event {
     @include standard-flex;
     max-width: clamp(10rem, 60vw, 20rem);
@@ -128,4 +180,62 @@ body {
       object-fit: cover;
     }
   }
+}
+
+#forecast.container {
+  @include container;
+
+  #daily,
+  #hourly {
+    display: none;
+    overflow: auto;
+
+    &.active {
+      display: block;
+    }
+  }
+
+  #daily {
+    overflow: hidden;
+  }
+
+  .hourly-list,
+  .daily-list {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: 1fr;
+    gap: $spc-100;
+    padding-inline: $spc-300;
+  }
+
+  .forecast-data {
+    @include card;
+  }
+}
+
+/***---FOOTER---***/
+
+footer {
+  min-height: 5vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: auto;
+}
+
+#copyright {
+  font-size: 1.24rem;
+  font-weight: 700;
+  text-decoration-line: none;
+  letter-spacing: 0.5px;
+  color: var(--clr-neutral-300);
+}
+
+.fa-github {
+  font-size: 1.38rem;
+  transition: transform 0.4s ease-in-out;
+}
+
+.fa-github:hover {
+  transform: rotate(360deg) scale(1.2);
 }
