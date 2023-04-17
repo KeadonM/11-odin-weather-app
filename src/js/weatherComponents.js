@@ -89,9 +89,8 @@ export function hourlyForecastComponent(data) {
   wrapper.appendChild(forecastList);
   forecastList.className = 'hourly-list scrollable';
 
-  const currentHour = getHours(
-    parseISO(fixNoLeadingZero(data.location.localtime))
-  );
+  const currentHour =
+    getHours(parseISO(fixNoLeadingZero(data.location.localtime))) + 1;
 
   let j = 0;
   for (let i = 0; i < 24; i++) {
@@ -131,7 +130,7 @@ export function weeklyForecastComponent(data) {
       const forecast = buildForecast(data[key].day, 'daily');
       const dateDataPoint = formatDataPoint('date', data[key].date);
       forecast.firstChild.appendChild(
-        buildListItem('day', dateDataPoint.data, null, 'day heading')
+        buildListItem('day', dateDataPoint.data, null, null, 'day heading')
       );
       forecastList.appendChild(forecast);
     }
@@ -164,6 +163,7 @@ function buildDataList(data, type) {
       let li = buildListItem(
         key,
         dataPoint.data,
+        dataPoint.metric,
         dataPoint.imperial,
         dataPoint.style,
         dataPoint.icon
@@ -190,13 +190,15 @@ function buildCondition(conditionData, includeLabel) {
   const conditionIcon = document.createElement('img');
   condition.appendChild(conditionIcon);
   conditionIcon.src = conditionData.icon;
+  conditionIcon.className = 'condition-icon';
 
   return condition;
 }
 
-function buildListItem(type, dataPoint, imperial, style, icon) {
+function buildListItem(type, dataPoint, metric, imperial, style, icon) {
   const li = document.createElement('li');
-  li.className = style === undefined ? type.replace('_', '-') : style;
+  li.className = style === undefined ? type.replaceAll('_', '-') : style;
+  if (metric != undefined) li.dataset.metric = metric;
   if (imperial != undefined) li.dataset.imperial = imperial;
   if (icon != undefined) li.appendChild(buildIcon(icon, 'icon'));
 
@@ -227,6 +229,7 @@ function formatDataPoint(key, value, weatherData, dataType) {
   let label = null;
   let unit = null;
   let imperial = null;
+  let metric = null;
   let style = null;
   let icon = null;
 
@@ -234,23 +237,23 @@ function formatDataPoint(key, value, weatherData, dataType) {
 
   if (typeof value === 'number') value = Math.round(value);
 
-  console.log(weatherData);
-
   switch (key) {
     case 'temp_c':
+      imperial = Math.round(value * 1.8 + 32);
+      metric = value;
+      style = 'temp heading';
       value = ' ' + value;
       unit = '°c';
-      imperial = Math.round(value * 1.8 + 32);
-      style = 'heading';
 
       data = { 'icon label fa-solid fa-temperature-half': '', value, unit };
-      return { data, imperial, style };
+      return { data, imperial, style, metric };
 
     case 'feelslike_c':
       if (dataType === 'hourly') return false;
-      label = 'Feels like';
-      unit = '°';
+      metric = value;
       imperial = Math.round(value * 1.8 + 32);
+      label = 'Feels Like ';
+      unit = '°';
 
       data = {
         label,
@@ -258,21 +261,22 @@ function formatDataPoint(key, value, weatherData, dataType) {
         value,
         unit,
       };
-      return { data, imperial };
+      return { data, imperial, metric };
 
     case 'wind_kph':
-      value = ' ' + value;
-      unit = 'km/h';
+      metric = value;
       imperial = Math.round(value * 0.6213712);
+      value = ' ' + value;
+      unit = 'kph';
 
       data = { 'icon label fa-solid fa-wind': '', value, unit };
-      return { data, imperial };
+      return { data, imperial, metric };
 
     case 'humidity':
       icon = 'humidity-icon.svg';
       value = ' ' + value;
       unit = '%';
-      style = 'label-icon';
+      style = 'humidity label-icon';
 
       data = { 'humidity-icon': '', value, unit };
       return { data, icon, style };
@@ -281,13 +285,13 @@ function formatDataPoint(key, value, weatherData, dataType) {
       icon = 'humidity-icon.svg';
       value = ' ' + value;
       unit = '%';
-      style = 'label-icon';
+      style = 'humidity label-icon';
 
       data = { value, unit };
       return { data, icon, style };
 
     case 'uv':
-      label = 'UV';
+      label = 'UV ';
 
       data = { label, value };
       return { data };
@@ -302,16 +306,16 @@ function formatDataPoint(key, value, weatherData, dataType) {
       let minUnit = '°/';
       let max = Math.round(weatherData.maxtemp_c);
       let maxUnit = '°';
-      imperial = Math.round(value * 1.8 + 32);
+      metric = min + '-' + max;
+      imperial = Math.round(min * 1.8 + 32) + '-' + Math.round(max * 1.8 + 32);
       style = 'min-max';
 
       data = { min, minUnit, max, maxUnit };
-      return { data, imperial };
+      return { data, imperial, metric };
 
     case 'daily_chance_of_rain':
       let chanceOfRain = value;
       let chanceOfSnow = weatherData.daily_chance_of_snow;
-      console.log(chanceOfSnow);
 
       if (chanceOfSnow > chanceOfRain || chanceOfSnow > 50) {
         chanceOfSnow = ' ' + chanceOfSnow;
@@ -340,10 +344,13 @@ function formatDataPoint(key, value, weatherData, dataType) {
       return { data };
 
     case 'time':
-      value = formatCustomDate(parseISO(value), 'h:mm aa').split('-');
-      style = 'hour heading';
+      let currentTime = formatCustomDate(parseISO(value), 'h:mm-aa').split('-');
 
-      data = { hour: value[0] };
+      value = currentTime[0] + ' ';
+      unit = currentTime[1];
+      style = 'time heading';
+
+      data = { value, unit };
       return { data, style };
 
     case 'name':
@@ -429,19 +436,19 @@ function getWeekDay(date) {
 
   switch (day) {
     case 0:
-      return 'Sunday';
+      return 'Sun';
     case 1:
-      return 'Monday';
+      return 'Mon';
     case 2:
-      return 'Tuesday';
+      return 'Tue';
     case 3:
-      return 'Wednesday';
+      return 'Wed';
     case 4:
-      return 'Thursday';
+      return 'Thu';
     case 5:
-      return 'Friday';
+      return 'Fri';
     case 6:
-      return 'Saturday';
+      return 'Sat';
     default:
       throw new Error('Invalid day of the week number');
   }

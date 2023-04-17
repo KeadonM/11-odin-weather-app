@@ -1,4 +1,5 @@
 import './css/reset.css';
+import './css/sliderSwitch.scss';
 import './css/style.scss';
 import apiKey from '../apikey.json';
 import './js/handleSwitches.js';
@@ -18,7 +19,7 @@ const searchBar = document.getElementById('location-search');
 
 searchBar.addEventListener('keyup', async (e) => {
   e.preventDefault();
-  searchBar.nextElementSibling.textContent = ``;
+  searchBar.parentElement.nextElementSibling.textContent = ``;
   searchBar.setCustomValidity('');
   if (e.key !== 'Enter') return;
 
@@ -46,7 +47,7 @@ searchBar.addEventListener('keyup', async (e) => {
 export async function searchLocation(location) {
   const weatherData = await getWeather(location);
   if (weatherData.error) {
-    searchBar.nextElementSibling.textContent = `Sorry, we couldn't find that location. Please try again.`;
+    searchBar.parentElement.nextElementSibling.textContent = `Sorry, we couldn't find that location. Please try again.`;
     searchBar.setCustomValidity('Invalid Search');
     return false;
   }

@@ -53,13 +53,12 @@ function buildDataList(data) {
   return ul;
 }
 
-function buildListItem(type, dataPoint, imperial) {
+function buildListItem(type, dataPoint) {
   const li = document.createElement('li');
   li.className = type.replace('_', '-');
-  li.dataset.imperial = imperial;
 
   for (let key in dataPoint) {
-    if (dataPoint[key] != imperial && dataPoint[key] !== '')
+    if (dataPoint[key] !== '')
       li.appendChild(buildDataSpan(dataPoint[key], key));
   }
 

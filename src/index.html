@@ -19,18 +19,36 @@
     <div id="app">
       <div id="upper-section">
         <div id="search" class="container">
-          <div id="input-wrapper">
-            <label for="location-search" class="heading">Search</label>
-            <input
-              type="text"
-              name="location"
-              id="location-search"
-              placeholder="Search Location" />
-            <span class="error"></span>
+          <div class="search-switch-wrapper">
+            <div id="input-wrapper">
+              <label for="location-search" class="heading">Search</label>
+              <div class="search-switch-wrapper">
+                <input
+                  type="text"
+                  name="location"
+                  id="location-search"
+                  placeholder="Search Location" />
+                <label class="switch unit">
+                  <input type="checkbox" />
+                  <span class="slider round">
+                    <div class="slider-label">F</div>
+                    <div class="slider-label">C</div>
+                  </span>
+                </label>
+              </div>
+              <span class="error"></span>
+            </div>
           </div>
+
           <div id="history">
-            <p class="heading">History</p>
-            <ul class="list scrollable"></ul>
+            <p class="heading in-list">History</p>
+            <button class="history-button">
+              <i class="fa-solid fa-clock-rotate-left"></i>
+            </button>
+
+            <ul class="list scrollable" tabindex="0">
+              <p class="heading">History</p>
+            </ul>
           </div>
         </div>
 
@@ -41,7 +59,13 @@
       </div>
 
       <div id="forecast" class="container">
-        <button class="switch-forecast-type">hourly</button>
+        <label class="switch forecast">
+          <input type="checkbox" />
+          <span class="slider round">
+            <div class="slider-label">H</div>
+            <div class="slider-label">D</div>
+          </span>
+        </label>
         <div id="daily" class="active">forecast</div>
         <div id="hourly">hourly</div>
       </div>
