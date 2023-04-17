@@ -2,7 +2,7 @@ import { format, parseISO } from 'date-fns';
 
 export function upcomingEventsComponent(data) {
   const wrapper = document.createElement('div');
-  wrapper.className = 'upcoming-events-wrapper';
+  wrapper.className = 'upcoming-events-wrapper scrollable';
 
   for (let event in data.events) {
     const eventDetails = buildEvent(data.events[event]);
@@ -16,6 +16,7 @@ function buildEvent(data) {
   const eventWrapper = document.createElement('a');
   eventWrapper.className = 'upcoming-event';
   eventWrapper.href = data.url;
+  eventWrapper.setAttribute('draggable', 'false');
 
   const eventDetails = buildDataList(data);
   eventWrapper.appendChild(eventDetails);
@@ -23,6 +24,7 @@ function buildEvent(data) {
   const eventImage = document.createElement('img');
   eventWrapper.appendChild(eventImage);
   eventImage.src = data.images[0].url;
+  eventImage.setAttribute('draggable', 'false');
 
   return eventWrapper;
 }
@@ -79,13 +81,9 @@ function formatDataPoint(key, value, unit) {
     case 'name':
       label = '';
       unit = '';
-      value =
-        value.length > 45
-          ? value.split('').splice(0, 42).join('') + '...'
-          : value;
       return { label, value, unit };
     case 'type':
-      label = 'Event type: ';
+      label = 'Type: ';
       value = value + ', ';
       return { label, value, unit };
     case 'date':
@@ -100,7 +98,7 @@ function formatDataPoint(key, value, unit) {
 function formatCustomDate(inputDate) {
   try {
     const date = parseISO(inputDate);
-    return format(date, 'EEE - MMM do - h:mm aa');
+    return format(date, 'MMM do - h:mm aa');
   } catch {
     console.warn('invalid date format');
     return 'Unknown date';

@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>PlaceHolder</title>
+    <title>Weather</title>
     <script
       defer
       src="https://kit.fontawesome.com/7881ce7c0a.js"
@@ -19,7 +19,7 @@
     <div id="app">
       <div id="upper-section">
         <div id="search" class="container">
-          <div class="input-wrapper">
+          <div id="input-wrapper">
             <label for="location-search" class="heading">Search</label>
             <input
               type="text"
@@ -29,13 +29,12 @@
             <span class="error"></span>
           </div>
           <div id="history">
-            <ul class="list"></ul>
+            <p class="heading">History</p>
+            <ul class="list scrollable"></ul>
           </div>
         </div>
 
-        <div id="time" class="container">
-          <div id="currentTime">Time</div>
-        </div>
+        <div id="time" class="container"></div>
 
         <div id="current" class="container">current</div>
         <div id="event" class="container"></div>

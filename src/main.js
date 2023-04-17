@@ -2,6 +2,7 @@ import './css/reset.css';
 import './css/style.scss';
 import apiKey from '../apikey.json';
 import './js/handleSwitches.js';
+import { runAddScrollEvents } from './js/mouseToTouch.js';
 import {
   currentWeatherComponent,
   hourlyForecastComponent,
@@ -13,6 +14,17 @@ import { historyComponent } from './js/miscComponents.js';
 
 const weatherKey = apiKey.weather;
 const ticketmasterkey = apiKey.ticketmaster;
+const searchBar = document.getElementById('location-search');
+
+searchBar.addEventListener('keyup', async (e) => {
+  e.preventDefault();
+  searchBar.nextElementSibling.textContent = ``;
+  searchBar.setCustomValidity('');
+  if (e.key !== 'Enter') return;
+
+  searchLocation(searchBar.value);
+  searchBar.value = '';
+});
 
 (async function geoSearch() {
   try {
@@ -31,18 +43,6 @@ const ticketmasterkey = apiKey.ticketmaster;
   }
 })();
 
-const searchBar = document.getElementById('location-search');
-
-searchBar.addEventListener('keyup', async (e) => {
-  e.preventDefault();
-  searchBar.nextElementSibling.textContent = ``;
-  searchBar.setCustomValidity('');
-  if (e.key !== 'Enter') return;
-
-  searchLocation(searchBar.value);
-  searchBar.value = '';
-});
-
 export async function searchLocation(location) {
   const weatherData = await getWeather(location);
   if (weatherData.error) {
@@ -52,6 +52,7 @@ export async function searchLocation(location) {
   }
   displayWeatherData(weatherData);
   saveHistory(weatherData.location.name);
+  document.title = weatherData.location.name + ' | Weather';
 
   const queryType = getQueryType(location, weatherData.location.name);
   const eventData = await getEvents(queryType, location);
@@ -62,6 +63,7 @@ export async function searchLocation(location) {
     return true;
   }
   displayEvents(eventData);
+  runAddScrollEvents();
 
   return true;
 }
@@ -98,7 +100,7 @@ function saveHistory(query) {
 async function getWeather(location) {
   try {
     const response = await fetch(
-      `http://api.weatherapi.com/v1/forecast.json?key=${weatherKey}&q=${location}&days=7&aqi=no&alerts=no`,
+      `http://api.weatherapi.com/v1/forecast.json?key=${weatherKey}&q=${location}&days=8&aqi=no&alerts=no`,
       {
         mode: 'cors',
       }
@@ -130,7 +132,7 @@ async function getEvents(queryType, location) {
 function displayWeatherData(weatherData) {
   console.log(weatherData);
 
-  const localTimeContainer = document.getElementById('currentTime');
+  const localTimeContainer = document.getElementById('time');
   localTimeContainer.innerHTML = '';
   const localTimeUI = localTimeComponent(weatherData);
   localTimeContainer.appendChild(localTimeUI);
@@ -142,9 +144,7 @@ function displayWeatherData(weatherData) {
 
   const hourlyContainer = document.getElementById('hourly');
   hourlyContainer.innerHTML = '';
-  const hourlyUI = hourlyForecastComponent(
-    weatherData.forecast.forecastday[0].hour
-  );
+  const hourlyUI = hourlyForecastComponent(weatherData);
   hourlyContainer.appendChild(hourlyUI);
 
   const forecastContainer = document.getElementById('daily');

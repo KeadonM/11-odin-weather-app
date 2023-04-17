@@ -1,13 +1,39 @@
-import { format, parseISO } from 'date-fns';
+import { format, getDay, getHours, parseISO, addSeconds } from 'date-fns';
 
 export function localTimeComponent(data) {
   const wrapper = document.createElement('div');
-  wrapper.className = 'current-weather-wrapper';
+  wrapper.className = 'location-time-wrapper';
 
-  const locationData = buildDataList(data.location);
-  wrapper.appendChild(locationData);
+  const location = document.createElement('div');
+  wrapper.appendChild(location);
+  location.className = 'location';
 
-  const currentAstro = buildDataList(data.forecast.forecastday[0].astro);
+  const cityData = formatDataPoint('name', data.location.name);
+  const city = buildDataSpan(cityData.data.city, 'city');
+  location.appendChild(city);
+
+  const countryData = formatDataPoint('country', data.location.country);
+  const country = buildDataSpan(countryData.data.country, 'country');
+  location.appendChild(country);
+
+  const weekday = document.createElement('span');
+  wrapper.appendChild(weekday);
+  weekday.className = 'current-weekday';
+
+  const date = document.createElement('span');
+  wrapper.appendChild(date);
+  date.className = 'current-date';
+
+  const clock = document.createElement('span');
+  wrapper.appendChild(clock);
+  clock.className = 'current-time';
+
+  setUpClock(data.location.localtime, weekday, date, clock);
+
+  const currentAstro = buildDataList(
+    data.forecast.forecastday[0].astro,
+    'astro'
+  );
   wrapper.appendChild(currentAstro);
 
   const sunrise = currentAstro.querySelector('.sunrise .value').textContent;
@@ -18,11 +44,38 @@ export function localTimeComponent(data) {
   return wrapper;
 }
 
+function setUpClock(time, weekday, date, clock) {
+  startClock();
+  displayClock();
+
+  return clock;
+
+  function startClock() {
+    let now = new Date(time);
+    time = addSeconds(now, 1);
+
+    setTimeout(startClock, 1000);
+  }
+
+  function displayClock() {
+    const formattedTime = formatCustomDate(
+      time,
+      'h:mm:ss aa - EEE - MMM do'
+    ).split('-');
+
+    weekday.textContent = formattedTime[1].toUpperCase();
+    date.textContent = formattedTime[2];
+    clock.textContent = formattedTime[0];
+
+    setTimeout(displayClock, 1000);
+  }
+}
+
 export function currentWeatherComponent(data) {
   const wrapper = document.createElement('div');
   wrapper.className = 'current-weather-wrapper';
 
-  const currentWeather = buildDataList(data.current);
+  const currentWeather = buildDataList(data.current, 'current');
   wrapper.appendChild(currentWeather);
 
   return wrapper;
@@ -34,10 +87,32 @@ export function hourlyForecastComponent(data) {
 
   const forecastList = document.createElement('ol');
   wrapper.appendChild(forecastList);
-  forecastList.className = 'hourly-list';
+  forecastList.className = 'hourly-list scrollable';
+
+  const currentHour = getHours(
+    parseISO(fixNoLeadingZero(data.location.localtime))
+  );
+
+  let j = 0;
+  for (let i = 0; i < 24; i++) {
+    const hourToDisplay = currentHour + i;
+    let amPm;
+
+    let forecast;
+    if (hourToDisplay < 24) {
+      forecast = buildForecast(
+        data.forecast.forecastday[0].hour[hourToDisplay],
+        'hourly'
+      );
+    } else {
+      forecast = buildForecast(data.forecast.forecastday[1].hour[j], 'hourly');
+      j++;
+    }
+
+    forecastList.appendChild(forecast);
+  }
 
   for (let key in data) {
-    forecastList.appendChild(buildForecast(data[key], 'hourly'));
   }
 
   return wrapper;
@@ -49,10 +124,17 @@ export function weeklyForecastComponent(data) {
 
   const forecastList = document.createElement('ol');
   wrapper.appendChild(forecastList);
-  forecastList.className = 'daily-list';
+  forecastList.className = 'daily-list scrollable';
 
   for (let key in data) {
-    forecastList.appendChild(buildForecast(data[key].day, 'daily'));
+    if (key != 0) {
+      const forecast = buildForecast(data[key].day, 'daily');
+      const dateDataPoint = formatDataPoint('date', data[key].date);
+      forecast.firstChild.appendChild(
+        buildListItem('day', dateDataPoint.data, null, 'day heading')
+      );
+      forecastList.appendChild(forecast);
+    }
   }
 
   return wrapper;
@@ -62,29 +144,31 @@ function buildForecast(data, type) {
   const wrapper = document.createElement('div');
   wrapper.className = `${type}-forecast forecast-data`;
 
-  const forecast = buildDataList(data);
+  const forecast = buildDataList(data, type);
   wrapper.appendChild(forecast);
 
   return wrapper;
 }
 
-function buildDataList(data) {
+function buildDataList(data, type) {
   const ul = document.createElement('ul');
-  ul.className = 'data-list';
+  ul.className = `data-list ${type}`;
 
   try {
     ul.appendChild(buildCondition(data.condition));
   } catch (err) {}
 
   for (let key in data) {
-    const dataPoint = formatDataPoint(key, data[key]);
+    const dataPoint = formatDataPoint(key, data[key], data, type);
     if (dataPoint) {
-      const li = buildListItem(
+      let li = buildListItem(
         key,
         dataPoint.data,
         dataPoint.imperial,
-        dataPoint.style
+        dataPoint.style,
+        dataPoint.icon
       );
+
       ul.appendChild(li);
     }
   }
@@ -92,14 +176,16 @@ function buildDataList(data) {
   return ul;
 }
 
-function buildCondition(conditionData) {
+function buildCondition(conditionData, includeLabel) {
   const condition = document.createElement('li');
   condition.className = 'heading condition';
 
-  const conditionLabel = document.createElement('span');
-  condition.appendChild(conditionLabel);
-  conditionLabel.className = 'condition-label';
-  conditionLabel.textContent = conditionData.text;
+  if (includeLabel) {
+    const conditionLabel = document.createElement('span');
+    condition.appendChild(conditionLabel);
+    conditionLabel.className = 'condition-label';
+    conditionLabel.textContent = conditionData.text.replace('possible', '');
+  }
 
   const conditionIcon = document.createElement('img');
   condition.appendChild(conditionIcon);
@@ -108,10 +194,11 @@ function buildCondition(conditionData) {
   return condition;
 }
 
-function buildListItem(type, dataPoint, imperial, style) {
+function buildListItem(type, dataPoint, imperial, style, icon) {
   const li = document.createElement('li');
   li.className = style === undefined ? type.replace('_', '-') : style;
   if (imperial != undefined) li.dataset.imperial = imperial;
+  if (icon != undefined) li.appendChild(buildIcon(icon, 'icon'));
 
   for (let key in dataPoint) {
     if (dataPoint[key] != imperial)
@@ -129,47 +216,75 @@ function buildDataSpan(content, style) {
   return span;
 }
 
-function formatDataPoint(key, value) {
+function buildIcon(icon, style) {
+  const img = document.createElement('img');
+  img.src = icon;
+
+  return img;
+}
+
+function formatDataPoint(key, value, weatherData, dataType) {
   let label = null;
   let unit = null;
   let imperial = null;
   let style = null;
+  let icon = null;
 
   let data = null;
 
   if (typeof value === 'number') value = Math.round(value);
 
+  console.log(weatherData);
+
   switch (key) {
     case 'temp_c':
-      unit = 'c';
+      value = ' ' + value;
+      unit = '°c';
       imperial = Math.round(value * 1.8 + 32);
+      style = 'heading';
 
-      data = { value, unit };
-      return { data, imperial };
+      data = { 'icon label fa-solid fa-temperature-half': '', value, unit };
+      return { data, imperial, style };
 
     case 'feelslike_c':
+      if (dataType === 'hourly') return false;
       label = 'Feels like';
-      unit = 'c';
+      unit = '°';
       imperial = Math.round(value * 1.8 + 32);
 
-      data = { label, value, unit };
+      data = {
+        label,
+        // 'icon label fa-solid fa-temperature-half': '',
+        value,
+        unit,
+      };
       return { data, imperial };
 
     case 'wind_kph':
-      label = 'Wind';
+      value = ' ' + value;
       unit = 'km/h';
       imperial = Math.round(value * 0.6213712);
 
-      data = { label, value, unit };
+      data = { 'icon label fa-solid fa-wind': '', value, unit };
       return { data, imperial };
 
     case 'humidity':
-      label = 'Humidty';
+      icon = 'humidity-icon.svg';
+      value = ' ' + value;
       unit = '%';
-      imperial = Math.round(value * 0.6213712);
+      style = 'label-icon';
 
-      data = { label, value, unit };
-      return { data, imperial };
+      data = { 'humidity-icon': '', value, unit };
+      return { data, icon, style };
+
+    case 'avghumidity':
+      icon = 'humidity-icon.svg';
+      value = ' ' + value;
+      unit = '%';
+      style = 'label-icon';
+
+      data = { value, unit };
+      return { data, icon, style };
 
     case 'uv':
       label = 'UV';
@@ -177,74 +292,79 @@ function formatDataPoint(key, value) {
       data = { label, value };
       return { data };
 
+    case 'date':
+      const weekDay = getWeekDay(value);
+      data = { weekDay };
+      return { data };
+
     case 'mintemp_c':
-      label = 'Low';
-      unit = 'c';
+      let min = value;
+      let minUnit = '°/';
+      let max = Math.round(weatherData.maxtemp_c);
+      let maxUnit = '°';
       imperial = Math.round(value * 1.8 + 32);
+      style = 'min-max';
 
-      data = { label, value, unit };
-      return { data, imperial };
-
-    case 'maxtemp_c':
-      label = 'High';
-      unit = 'c';
-      imperial = Math.round(value * 1.8 + 32);
-
-      data = { label, value, unit };
+      data = { min, minUnit, max, maxUnit };
       return { data, imperial };
 
     case 'daily_chance_of_rain':
-      label = 'Rain';
-      unit = '%';
+      let chanceOfRain = value;
+      let chanceOfSnow = weatherData.daily_chance_of_snow;
+      console.log(chanceOfSnow);
 
-      data = { label, value, unit };
-      return { data };
+      if (chanceOfSnow > chanceOfRain || chanceOfSnow > 50) {
+        chanceOfSnow = ' ' + chanceOfSnow;
+        unit = '%';
+        data = { 'icon label fa-solid fa-snowflake': '', chanceOfSnow, unit };
+      } else {
+        chanceOfRain = ' ' + chanceOfRain;
+        unit = '%';
+        data = { 'icon label fa-solid fa-droplet': '', chanceOfRain, unit };
+      }
 
-    case 'daily_chance_of_snow':
-      label = 'Snow';
-      unit = '%';
-
-      data = { label, value, unit };
       return { data };
 
     case 'sunrise':
       label = 'Sunrise';
       value = value[0] === '0' ? value.split('').splice(1).join('') : value;
 
-      data = { label, value };
+      data = { 'icon label fa-solid fa-sun': '', value };
       return { data };
 
     case 'sunset':
       label = 'Sunset';
       value = value[0] === '0' ? value.split('').splice(1).join('') : value;
 
-      data = { label, value };
+      data = { 'icon label fa-solid fa-moon': '', value };
       return { data };
 
+    case 'time':
+      value = formatCustomDate(parseISO(value), 'h:mm aa').split('-');
+      style = 'hour heading';
+
+      data = { hour: value[0] };
+      return { data, style };
+
     case 'name':
-      style = 'heading main';
-      data = { value };
+      const city = value + ' ';
+      data = { city };
       return { data, style };
 
     case 'country':
+      let country = value;
       if (value.includes('USA') || value.includes('United States'))
-        value = 'United States';
-      data = { value };
+        country = 'United States';
 
+      data = { country };
       return { data };
 
-    case 'localtime':
-      value = formatCustomDate(value).split('-');
+    // case 'last_updated':
+    //   label = 'Last Updated';
+    //   value = formatCustomDate(value).split('-');
 
-      data = { hour: value[0], day: value[1], date: value[2] };
-      return { data };
-
-    case 'last_updated':
-      label = 'Last Updated';
-      value = formatCustomDate(value).split('-');
-
-      data = { label, hour: value[0] };
-      return { data };
+    //   data = { label, hour: value[0] };
+    //   return { data };
 
     default:
       return false;
@@ -259,8 +379,11 @@ function setBackground(time, sunrise, sunset) {
   let midday = sunrise + totalDay / 2;
   let midnight = (sunset + totalNight / 2) % 1440;
 
+  let cycleStart = midnight <= 1440 ? midnight : 0;
+  let cycleEnd = midnight <= 1440 ? 1440 : midnight;
+
   const intervals = [
-    { start: 0, end: midnight, bg: 'bg-10.png' },
+    { start: cycleStart, end: midnight, bg: 'bg-10.png' },
     { start: midnight, end: midnight + 60, bg: 'bg-11.png' },
     { start: midnight + 60, end: sunrise - 60, bg: 'bg-12.png' },
     { start: sunrise - 60, end: sunrise, bg: 'bg-1.png' },
@@ -271,7 +394,7 @@ function setBackground(time, sunrise, sunset) {
     { start: midday + 90, end: sunset - 60, bg: 'bg-6.png' },
     { start: sunset - 60, end: sunset, bg: 'bg-7.png' },
     { start: sunset, end: sunset + 60, bg: 'bg-8.png' },
-    { start: sunset + 60, end: 1440, bg: 'bg-9.png' },
+    { start: sunset + 60, end: cycleEnd, bg: 'bg-9.png' },
   ];
 
   let backgroundImage;
@@ -291,12 +414,9 @@ function setBackground(time, sunrise, sunset) {
   ).style.backgroundImage = `url(${backgroundImage})`;
 }
 
-function formatCustomDate(input) {
-  input = input.replace(/(\d{4}-\d{2}-\d{2} )(\d{1}:)/, '$10$2');
-
+function formatCustomDate(input, customFormat) {
   try {
-    const date = parseISO(input);
-    return format(date, 'h:mm aa - EEE - MMM do');
+    return format(input, customFormat);
   } catch (err) {
     console.warn(err);
     console.warn({ warning: 'invalid date format', input: input });
@@ -304,10 +424,32 @@ function formatCustomDate(input) {
   }
 }
 
-function formatTime12Hour(input) {
-  input = input.replace(/(\d{4}-\d{2}-\d{2} )(\d{1}:)/, '$10$2');
+function getWeekDay(date) {
+  const day = getDay(parseISO(date));
 
+  switch (day) {
+    case 0:
+      return 'Sunday';
+    case 1:
+      return 'Monday';
+    case 2:
+      return 'Tuesday';
+    case 3:
+      return 'Wednesday';
+    case 4:
+      return 'Thursday';
+    case 5:
+      return 'Friday';
+    case 6:
+      return 'Saturday';
+    default:
+      throw new Error('Invalid day of the week number');
+  }
+}
+
+function formatTime12Hour(input) {
   try {
+    input = fixNoLeadingZero(input);
     const date = parseISO(input);
     return format(date, 'h:mm aa');
   } catch (err) {
@@ -335,4 +477,8 @@ function formatTimeToMinutes(timeStr) {
   let hours = parseInt(timeStr.substring(0, 2), 10);
   let minutes = parseInt(timeStr.substring(2, 4), 10);
   return hours * 60 + minutes;
+}
+
+function fixNoLeadingZero(input) {
+  return input.replace(/(\d{4}-\d{2}-\d{2} )(\d{1}:)/, '$10$2');
 }

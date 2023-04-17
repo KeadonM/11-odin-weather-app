@@ -38,9 +38,19 @@ $spc-600: clamp(2rem, calc(1.73rem + 1.38vw), 3.38rem);
 $spc-700: clamp(3rem, calc(2.7rem + 1.5vw), 4.5rem);
 $spc-800: clamp(4rem, calc(3.45rem + 2.75vw), 6.75rem);
 
+$app-padding: clamp(0.5rem, calc(0.1rem + 1.75vw), 2.25rem);
+
 // Misc
 $border-radius: 8px;
 $shadow: 4px 4px 8px rgba(0, 0, 0, 0.5);
+
+$frost-opacity-200: 0.12;
+$frost-opacity-400: 0.24;
+$frost-opacity-600: 0.48;
+$frost-opacity-800: 0.7;
+$media-query-primary: 57rem;
+$media-query-secondary: 45rem;
+$media-query-tertiary: 23.125rem;
 
 body {
   font-family: $ff-primary;
@@ -60,6 +70,7 @@ body {
 
 @mixin standard-flex {
   display: flex;
+  flex-direction: row;
   justify-content: space-between;
   gap: $spc-100;
 }
@@ -75,41 +86,82 @@ body {
 }
 
 @mixin card {
-  min-width: 10rem;
-  background-color: rgba($clr-neutral-100, 0.33);
+  border-radius: $border-radius * 2;
+  color: $clr-neutral-100;
+  // padding: $spc-300;
+}
 
-  border-radius: $border-radius;
+@mixin datalist {
+  display: grid;
+  justify-items: center;
+  align-items: center;
+  padding: $spc-300;
+  gap: $spc-100;
+}
+
+@mixin background-frost($opacity, $hover-opacity) {
+  background-color: rgba($clr-neutral-100, $opacity);
+  backdrop-filter: blur(8px);
+  transition: 0.12s;
+
+  &:hover,
+  &:active {
+    background-color: rgba($clr-neutral-100, $hover-opacity);
+    backdrop-filter: blur(0px);
+    transition: 0.12s;
+  }
+}
+
+@mixin limit-lines($lines) {
+  $line-height: 1.2rem;
+  line-height: $line-height; /* Set the line-height */
+  max-height: $line-height * $lines; /* Set max-height to line-height multiplied by the number of lines (2 in this case) */
+  overflow: hidden; /* Hide any text that goes beyond max-height */
+  text-overflow: ellipsis; /* Optional: use ellipsis to indicate text overflow */
+  display: -webkit-box; /* Required for -webkit-line-clamp to work */
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: $lines; /* Limit the number of displayed lines to 2 */
 }
 
 #app {
   @include flex-column;
   height: 100%;
-  // gap: $spc-400;
+  padding: $app-padding;
 }
 
 .heading {
   font-size: $fs-500;
   font-weight: bold;
+  margin-bottom: $spc-100;
 
   &.condition {
     @include standard-flex;
+    align-items: center;
+    justify-content: flex-start;
     font-size: $fs-500;
-  }
-
-  &.main {
-    font-size: $fs-600;
   }
 }
 
-.input-wrapper {
-  @include flex-column;
+.label-icon {
+  display: flex;
+  justify-content: center;
+  height: 1.5rem;
+  aspect-ratio: 1/1;
 
-  min-width: 10rem;
-  max-width: 17.5rem;
-
-  :invalid {
-    background-color: red;
+  img {
+    margin-right: $spc-100;
   }
+}
+
+.scrollable {
+  overflow: auto;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+.no-pointer-events {
+  pointer-events: none;
 }
 
 #upper-section {
@@ -117,28 +169,10 @@ body {
   display: grid;
   grid-template-areas:
     'search time info'
-    'none none events';
+    'search time events';
   justify-content: space-between;
   align-items: space-between;
-
-  @media (max-width: 40em) {
-    grid-template-areas:
-      'search search'
-      'time info'
-      'events events';
-
-    #current-info {
-      @include standard-flex();
-    }
-
-    #event {
-      .upcoming-events-wrapper {
-        @include standard-flex();
-        overflow: auto;
-        width: 100vw;
-      }
-    }
-  }
+  gap: $spc-200;
 
   .container {
     @include container;
@@ -155,36 +189,310 @@ body {
     }
     &#current {
       grid-area: info;
+      justify-self: end;
     }
     &#event {
       grid-area: events;
+    }
+  }
+
+  @media (max-width: $media-query-primary) {
+    grid-template-areas:
+      'search search'
+      'time info'
+      'none events';
+
+    input,
+    button {
+      padding: 6px;
+      padding-inline: 12px;
+    }
+
+    #search {
+      @include standard-flex();
+      flex-direction: row-reverse;
+      height: min-content;
+
+      #history {
+        height: 100%;
+        overflow: auto;
+        margin-left: auto;
+        .list {
+          @include standard-flex();
+          justify-content: start;
+        }
+      }
+    }
+
+    #time {
+      justify-self: start;
+    }
+
+    .location-time-wrapper,
+    .current-weather-wrapper {
+      height: 100%;
+    }
+
+    #event {
+      ::-webkit-scrollbar {
+        display: none;
+      }
+    }
+    @media (max-width: $media-query-secondary) {
+      grid-template-areas:
+        'search search'
+        'time info'
+        'events events';
+
+      #event {
+        .upcoming-events-wrapper {
+          width: 100%;
+        }
+      }
+    }
+    @media (max-width: $media-query-tertiary) {
+      grid-template-areas:
+        'search'
+        'time'
+        'info'
+        'events';
+
+      #time {
+        justify-self: center;
+
+        .location-time-wrapper {
+          height: 100%;
+        }
+      }
+
+      .container#current {
+        justify-self: center;
+        width: 100%;
+        .current-weather-wrapper {
+          width: 100%;
+        }
+      }
+    }
+  }
+}
+
+#search {
+  #input-wrapper {
+    @include flex-column;
+    margin-bottom: $spc-200;
+    min-width: 10rem;
+    max-width: 17.5rem;
+
+    input {
+      @include background-frost($frost-opacity-200, $frost-opacity-400);
+      padding-left: $spc-100;
+      border-radius: $border-radius * 2;
+      transition: 0.12s;
+
+      // &:hover {
+      //   background-color: $clr-neutral-100;
+      //   transition: 0.12s;
+      // }
+    }
+
+    ::placeholder {
+      color: $clr-neutral-100;
+    }
+
+    :invalid {
+      background-color: red;
+    }
+  }
+
+  #history {
+    @include flex-column;
+    @include grow;
+    margin-bottom: $spc-200;
+
+    .list {
+      @include flex-column;
+      overflow: auto;
+      height: 100%;
+      gap: $spc-100;
+
+      li {
+        button {
+          @include background-frost($frost-opacity-200, $frost-opacity-200);
+          @include card();
+          width: 100%;
+        }
+      }
+    }
+  }
+}
+
+#time {
+  @media (min-width: $media-query-primary) {
+    position: absolute;
+    top: 0;
+    left: 75%;
+    transform: translate(-50%);
+  }
+
+  .location-time-wrapper {
+    display: grid;
+    grid-template-areas:
+      'location location'
+      'time time'
+      'day date'
+      'astro astro';
+
+    .location {
+      grid-area: location;
+    }
+    .current-weekday {
+      grid-area: day;
+      justify-self: end;
+    }
+    .current-date {
+      grid-area: date;
+      justify-self: start;
+    }
+    .current-time {
+      grid-area: time;
+      justify-self: center;
+    }
+    .astro {
+      grid-area: astro;
+    }
+  }
+
+  .location {
+    text-align: center;
+    font-size: calc($fs-700 * 0.9);
+    font-weight: 600;
+    letter-spacing: 0.75px;
+    .country {
+      font-size: calc($fs-600 * 0.9);
+    }
+  }
+
+  .current-time {
+    font-size: $fs-800;
+    margin-top: calc($spc-300 * -1);
+  }
+
+  .current-weekday {
+    margin-right: $spc-100;
+  }
+
+  .astro {
+    @include standard-flex();
+    justify-content: center;
+    align-items: center;
+    margin-top: $spc-500;
+  }
+
+  .sunrise,
+  .sunset {
+    @include flex-column();
+    @include background-frost($frost-opacity-200, $frost-opacity-200);
+    @include card();
+    padding: $spc-200 $spc-300 $spc-100;
+    gap: $spc-100;
+
+    align-items: center;
+  }
+}
+
+#current {
+  align-items: center;
+  .current-weather-wrapper {
+    @include background-frost($frost-opacity-200, $frost-opacity-200);
+    @include card;
+  }
+
+  .data-list {
+    @include datalist();
+    grid-template-areas:
+      'temp condition'
+      'feelslike feelslike'
+      'humidity wind '
+      'uv uv'
+      'updated updated';
+
+    .condition {
+      grid-area: condition;
+    }
+    .temp-c {
+      grid-area: temp;
+    }
+    .feelslike-c {
+      grid-area: feelslike;
+    }
+    .humidty {
+      grid-area: humidity;
+    }
+    .wind-kph {
+      grid-area: wind;
+    }
+    .uv {
+      grid-area: uv;
+    }
+    .last-updated {
+      grid-area: updated;
     }
   }
 }
 
 #event {
   @include grow;
+  direction: rtl;
+  padding-bottom: $spc-200;
 
   .upcoming-events-wrapper {
-    overflow: auto;
+    width: clamp(15rem, 60vw, 22.5rem);
+    overflow-y: auto;
     height: 100%;
+
+    > :not(:first-child) {
+      margin-block: $spc-200;
+    }
   }
 
   .upcoming-event {
+    direction: ltr;
     @include standard-flex;
-    max-width: clamp(10rem, 60vw, 20rem);
+    @include card;
+    @include background-frost($frost-opacity-200, $frost-opacity-200);
+    height: clamp(5rem, 1rem + 10vh, 8rem);
 
     img {
-      height: clamp(5rem, 1rem + 10vh, 8rem);
+      @include card;
+      height: 100%;
       aspect-ratio: 1 / 1;
       object-fit: cover;
+    }
+
+    .data-list {
+      @include datalist();
+      justify-items: start;
+      grid-template-areas:
+        'name'
+        'date'
+        'type';
+
+      .name {
+        @include limit-lines(2);
+        grid-area: name;
+      }
+      .date {
+        grid-area: date;
+      }
+      .type {
+        @include limit-lines(1);
+        grid-area: type;
+      }
     }
   }
 }
 
-#forecast.container {
-  @include container;
-
+#forecast {
   #daily,
   #hourly {
     display: none;
@@ -204,12 +512,68 @@ body {
     display: grid;
     grid-auto-flow: column;
     grid-auto-columns: 1fr;
-    gap: $spc-100;
-    padding-inline: $spc-300;
+    gap: $spc-200;
   }
 
   .forecast-data {
     @include card;
+    @include background-frost($frost-opacity-200, $frost-opacity-200);
+    min-width: 15rem;
+  }
+
+  .daily-list .data-list {
+    @include datalist();
+    grid-template-areas:
+      'day condition'
+      'minmax uv'
+      'humidity precipitation';
+
+    .day {
+      grid-area: day;
+    }
+    .mintemp-c {
+      grid-area: minmax;
+    }
+    .uv {
+      grid-area: uv;
+    }
+    .daily-chance-of-snow,
+    .daily-chance-of-rain {
+      grid-area: precipitation;
+    }
+    .avghumidity {
+      grid-area: humidity;
+    }
+  }
+
+  .hourly-list .data-list {
+    @include datalist();
+    grid-template-areas:
+      'time condition'
+      'temp uv'
+      'humidity wind';
+
+    .time {
+      grid-area: time;
+    }
+    .condition {
+      grid-area: condition;
+    }
+    .temp-c {
+      grid-area: temp;
+    }
+    .feelslike-c {
+      grid-area: feelslike;
+    }
+    .humidty {
+      grid-area: humidity;
+    }
+    .wind-kph {
+      grid-area: wind;
+    }
+    .uv {
+      grid-area: uv;
+    }
   }
 }
 
@@ -238,4 +602,49 @@ footer {
 
 .fa-github:hover {
   transform: rotate(360deg) scale(1.2);
+
+  border: 24px 24px 24px 24px solid red;
+}
+
+/***---SCROLLBAR---***/
+
+/* WebKit-based browsers (Chrome, Safari, etc.) */
+::-webkit-scrollbar {
+  width: 32px;
+  height: 32px; /* Height of the scrollbar on horizontal containers */
+}
+
+/* Track (the background of the scrollbar) */
+::-webkit-scrollbar-track {
+  //Mimic margin
+  box-shadow: inset 0 0 100px 100px $clr-neutral-200;
+  border: solid 14px transparent;
+
+  border-radius: 999px;
+}
+
+/* Thumb (the actual scroll handle) */
+::-webkit-scrollbar-thumb {
+  //Mimic margin
+  box-shadow: inset 0 0 100px 100px $clr-neutral-400;
+
+  border: solid 12px transparent;
+  border-radius: 999px;
+
+  min-height: 45px;
+  min-width: 45px;
+}
+
+/* Hover effect for the thumb */
+::-webkit-scrollbar-thumb:hover {
+  box-shadow: inset 0 0 12px 12px $clr-neutral-400;
+  border: solid 10px transparent;
+  opacity: 0.33;
+  transition: 0.16s;
+}
+
+/* Firefox */
+* {
+  scrollbar-width: thin; /* Width of the scrollbar */
+  scrollbar-color: #888 #f0f0f0; /* Thumb color and track color */
 }
