@@ -32,7 +32,7 @@ searchBar.addEventListener('keyup', async (e) => {
     const ipResponse = await fetch('https://api.ipify.org?format=json');
     const ip = await ipResponse.json();
 
-    const ipDataResponse = await fetch(`http://ip-api.com/json/${ip.ip}`);
+    const ipDataResponse = await fetch(`https://ip-api.com/json/${ip.ip}`);
     const ipData = await ipDataResponse.json();
 
     searchLocation(ipData.city);
@@ -101,7 +101,7 @@ function saveHistory(query) {
 async function getWeather(location) {
   try {
     const response = await fetch(
-      `http://api.weatherapi.com/v1/forecast.json?key=${weatherKey}&q=${location}&days=8&aqi=no&alerts=no`,
+      `https://api.weatherapi.com/v1/forecast.json?key=${weatherKey}&q=${location}&days=8&aqi=no&alerts=no`,
       {
         mode: 'cors',
       }
