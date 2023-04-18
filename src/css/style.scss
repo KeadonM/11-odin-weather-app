@@ -412,6 +412,10 @@ body {
   direction: rtl;
   padding-bottom: $spc-200;
 
+  &:not(:has(.upcoming-events-wrapper)) .heading {
+    height: 100vh;
+  }
+
   .upcoming-events-wrapper {
     width: clamp(15rem, 60vw, 22.5rem);
     overflow-y: auto;

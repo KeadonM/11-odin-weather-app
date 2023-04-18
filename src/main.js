@@ -60,6 +60,7 @@ export async function searchLocation(location) {
 
   if (!eventData._embedded) {
     const eventContainer = document.getElementById('event');
+    eventContainer.innerHTML = '';
     eventContainer.appendChild(buildHeading('No Events Found'));
     return true;
   }
@@ -131,8 +132,6 @@ async function getEvents(queryType, location) {
 }
 
 function displayWeatherData(weatherData) {
-  console.log(weatherData);
-
   const localTimeContainer = document.getElementById('time');
   localTimeContainer.innerHTML = '';
   const localTimeUI = localTimeComponent(weatherData);
