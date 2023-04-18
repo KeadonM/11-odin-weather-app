@@ -53,7 +53,7 @@ export async function searchLocation(location) {
   }
   displayWeatherData(weatherData);
   saveHistory(weatherData.location.name);
-  document.title = weatherData.location.name + ' | Weather';
+  document.title = weatherData.location.name + ' | Weatherly';
 
   const queryType = getQueryType(location, weatherData.location.name);
   const eventData = await getEvents(queryType, location);
