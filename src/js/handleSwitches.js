@@ -17,7 +17,7 @@ switchUnitBtn.addEventListener('change', () => {
       const unit = element.querySelector('.unit');
       const imperial = element.getAttribute('data-imperial');
 
-      if (value.textContent !== imperial) {
+      if (value.textContent !== ' ' + imperial) {
         value.textContent = ' ' + imperial;
         if (unit.textContent === '°c') unit.textContent = '°f';
         if (unit.textContent === 'kph') unit.textContent = 'mph';

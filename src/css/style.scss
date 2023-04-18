@@ -541,7 +541,7 @@ body {
   }
 
   .hourly-list .data-list {
-    min-width: clamp(10rem, 12vw + 6.5rem, 12rem);
+    min-width: clamp(11rem, 12vw + 6.5rem, 13rem);
     @include datalist();
     grid-template-areas:
       'time time time condition'
