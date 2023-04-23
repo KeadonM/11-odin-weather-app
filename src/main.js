@@ -32,7 +32,7 @@ searchBar.addEventListener('keyup', async (e) => {
     const ipResponse = await fetch('https://api.ipify.org?format=json');
     const ip = await ipResponse.json();
 
-    const ipDataResponse = await fetch(`https://ip-api.com/json/${ip.ip}`);
+    const ipDataResponse = await fetch(`http://ip-api.com/json/${ip.ip}`);
     const ipData = await ipDataResponse.json();
 
     const city = ipData.city === undefined ? 'Toronto' : ipData.city;
