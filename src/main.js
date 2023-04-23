@@ -35,7 +35,9 @@ searchBar.addEventListener('keyup', async (e) => {
     const ipDataResponse = await fetch(`https://ip-api.com/json/${ip.ip}`);
     const ipData = await ipDataResponse.json();
 
-    searchLocation(ipData.city);
+    const city = ipData.city === undefined ? 'Toronto' : ipData.city;
+
+    searchLocation(city);
   } catch (err) {
     console.error(err);
     console.warn(`Couldn't find users location`);
