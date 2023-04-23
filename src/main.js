@@ -27,21 +27,23 @@ searchBar.addEventListener('keyup', async (e) => {
   searchBar.value = '';
 });
 
-(async function geoSearch() {
-  try {
-    const ipResponse = await fetch(`https://ipapi.co/json/`);
-    const ipData = await ipResponse.json();
+searchLocation('Toronto');
 
-    const city = ipData.city === undefined ? 'Toronto' : ipData.city;
+// (async function geoSearch() {
+//   try {
+//     const ipResponse = await fetch(`https://ipapi.co/json/`);
+//     const ipData = await ipResponse.json();
 
-    searchLocation(city);
-  } catch (err) {
-    console.error(err);
-    console.warn(`Couldn't find users location`);
+//     const city = ipData.city === undefined ? 'Toronto' : ipData.city;
 
-    searchLocation('Toronto');
-  }
-})();
+//     searchLocation(city);
+//   } catch (err) {
+//     console.error(err);
+//     console.warn(`Couldn't find users location`);
+
+//     searchLocation('Toronto');
+//   }
+// })();
 
 export async function searchLocation(location) {
   const weatherData = await getWeather(location);
