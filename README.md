@@ -10,7 +10,7 @@ It was an [assignment](https://www.theodinproject.com/lessons/node-path-javascri
 
 - Dynamic content rendering using JavaScript.
 - Search for specific locations to view weather data.
-- Displays weather based on IP if not using a privacy browser.
+- Displays weather based on IP geolocation.
 - Display current weather, hourly forecast, and weekly forecast.
 - Toggle between Fahrenheit and Celsius.
 - Display upcoming events in the searched location using Ticketmaster API.
