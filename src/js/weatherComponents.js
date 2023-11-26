@@ -273,7 +273,7 @@ function formatDataPoint(key, value, weatherData, dataType) {
       return { data, imperial, metric };
 
     case 'humidity':
-      icon = 'humidity-icon.svg';
+      icon = './humidity-icon.svg';
       value = ' ' + value;
       unit = '%';
       style = 'humidity label-icon';
@@ -282,7 +282,7 @@ function formatDataPoint(key, value, weatherData, dataType) {
       return { data, icon, style };
 
     case 'avghumidity':
-      icon = 'humidity-icon.svg';
+      icon = './humidity-icon.svg';
       value = ' ' + value;
       unit = '%';
       style = 'humidity label-icon';
@@ -390,18 +390,18 @@ function setBackground(time, sunrise, sunset) {
   let cycleEnd = midnight <= 1440 ? 1440 : midnight;
 
   const intervals = [
-    { start: cycleStart, end: midnight, bg: 'bg-10.png' },
-    { start: midnight, end: midnight + 60, bg: 'bg-11.png' },
-    { start: midnight + 60, end: sunrise - 60, bg: 'bg-12.png' },
-    { start: sunrise - 60, end: sunrise, bg: 'bg-1.png' },
-    { start: sunrise, end: sunrise + 60, bg: 'bg-2.png' },
-    { start: sunrise + 60, end: midday - 90, bg: 'bg-3.png' },
-    { start: midday - 90, end: midday, bg: 'bg-4.png' },
-    { start: midday, end: midday + 90, bg: 'bg-5.png' },
-    { start: midday + 90, end: sunset - 60, bg: 'bg-6.png' },
-    { start: sunset - 60, end: sunset, bg: 'bg-7.png' },
-    { start: sunset, end: sunset + 60, bg: 'bg-8.png' },
-    { start: sunset + 60, end: cycleEnd, bg: 'bg-9.png' },
+    { start: cycleStart, end: midnight, bg: './bg-10.png' },
+    { start: midnight, end: midnight + 60, bg: './bg-11.png' },
+    { start: midnight + 60, end: sunrise - 60, bg: './bg-12.png' },
+    { start: sunrise - 60, end: sunrise, bg: './bg-1.png' },
+    { start: sunrise, end: sunrise + 60, bg: './bg-2.png' },
+    { start: sunrise + 60, end: midday - 90, bg: './bg-3.png' },
+    { start: midday - 90, end: midday, bg: './bg-4.png' },
+    { start: midday, end: midday + 90, bg: './bg-5.png' },
+    { start: midday + 90, end: sunset - 60, bg: './bg-6.png' },
+    { start: sunset - 60, end: sunset, bg: './bg-7.png' },
+    { start: sunset, end: sunset + 60, bg: './bg-8.png' },
+    { start: sunset + 60, end: cycleEnd, bg: './bg-9.png' },
   ];
 
   let backgroundImage;
@@ -414,7 +414,7 @@ function setBackground(time, sunrise, sunset) {
   }
 
   backgroundImage =
-    backgroundImage === undefined ? 'bg-1.png' : backgroundImage;
+    backgroundImage === undefined ? '/bg-1.png' : backgroundImage;
 
   document.querySelector(
     'body'
